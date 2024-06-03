@@ -1,0 +1,15 @@
+Provided models:
+Sentiment Analysis: useful when you want to analyze the sentiment of a sentence. It receives sentence as input.
+Text Summarization: useful when you want to summarize a sentence or a paragraph. It receives text as input.
+Machine Translation: useful when you want to translate a sentence. It receives text as input.
+Fill Mask: useful when you want to fill the sentence at the masked position. It receives text as input.
+Question Answering: useful when you need to answer a question based on a given context.
+Image Classification: useful when you want to know the class of the image. It receives image_path as input.
+Object Detection: useful when you want to detect the objects in a photo. It receives image_path as input and output the description of the object.
+Colorization: useful when you want to colorize a photo. It receives image_path as input.
+Image Super-Resolution: useful when you want to create a high-resolution image from a low-resolution image.
+Image Denoising: useful when you want to denoise a noisy image. It receives image as input.
+Image Deblurring: useful when you want to deblur a blurry image. It receives image as input.
+Visual Question Answering: useful when you need to answer a question based on a given image.
+Image Captioning: useful when you want to know what is inside the photo. It receives image as input.
+Text-to-Image Generation: useful when you want to generate an image based on a given description.

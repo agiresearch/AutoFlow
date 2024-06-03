@@ -1,0 +1,6 @@
+Step 1:::Process:::identify the input data type based on the objective.:::next::step 2
+Step 2:::Process:::identify the output data type based on the objective.:::next::Step 3
+Step 3:::Process:::Select models in provided models list to enerate a to-do list to make sure the first model is able to handle the input data type and the last model generate the output data type.:::next::step 4
+Step 4:::decision:::Check whether every models in the generated to-do list is in the provided models.:::Yes::Step 5::No::Step 3
+Step 5:::decision:::Check the to-do list, to see whether the previous model output data type is the input data type of the next model.:::Yes::Step 6::No::Step 3
+Step 6:::terminal:::Output the to-do list solely with model name.:::
