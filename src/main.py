@@ -121,11 +121,12 @@ def finish_one_task(instruction, tool_info, other_info, flow, task_idx, query, t
                 tool_use = False
             
             if tool_use:
-                tool_name, price= check_tool_name(client, flow_ptr, str(res), list(tool_list.keys()), model_name=args.model_name)
-                total_price += price
-                tool = tool_list[tool_name]
                 for k in range(args.max_fail_times):
                     try:
+                        tool_name, price = check_tool_name(client, flow_ptr, str(res), list(tool_list.keys()),
+                                                           model_name=args.model_name)
+                        total_price += price
+                        tool = tool_list[tool_name]
                         param, price = get_tool_arg(client, flow_ptr, str(res), tool_info, tool_name, model_name=args.model_name)
                         total_price += price
                         if param == 'None':
@@ -150,6 +151,7 @@ def finish_one_task(instruction, tool_info, other_info, flow, task_idx, query, t
                             logging.error('Reach Max fail attempts on Get Tool Parameters.')
                             # if reach max fail attempts, do not use tool in this step.
                             current_progress.append(f'Answer {plan_round}: ```{res}```')
+                            return_res['reward'] = 0.0
                             break
                             # exit(1)
                         else:
@@ -210,7 +212,11 @@ def finish_one_task(instruction, tool_info, other_info, flow, task_idx, query, t
         if len(flow_ptr.branch) == 1:  # no branches
             flow_ptr = list(flow_ptr.branch.values())[0]
         else:
-            branch, price = check_branch(client, res, flow_ptr, model_name=args.model_name)
+            try:
+                branch, price = check_branch(client, res, flow_ptr, model_name=args.model_name)
+            except AssertionError:
+                return_res['reward'] = 0.0
+                break
             total_price += price
             flow_ptr = flow_ptr.branch[branch]
         logging.info(f'Current Block: \n```\n{flow_ptr}```')
@@ -247,7 +253,7 @@ def load_other_info(args):
     else:
         return ""
 
-def main(args, client):
+def main(args):
     # args = global_args()
     # args.log_name = os.path.join(args.log_dir, args.log_file_name)
     # set_logger(args)

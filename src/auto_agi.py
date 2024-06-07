@@ -75,7 +75,7 @@ def autoagi_gpt(args):
     args.flow_file = args.auto_flow_file
 
     for epoch in range(args.auto_epochs):
-        res = get_response_from_client(client, chat_history)
+        res = get_response_from_client(client, chat_history, args.auto_model_name)[0]
         fout = open(args.flow_file, 'w')
         fout.write(res)
         fout.close()
@@ -176,7 +176,8 @@ def autoagi_mixtral(args):
 
     model = AutoModelForCausalLMWithValueHead.from_pretrained(args.auto_model_name, cache_dir=args.cache_dir,
                                                               load_in_4bit=True,
-                                                              device_map="auto", peft_config=lora_config, )
+                                                              device_map="auto",
+                                                              peft_config=lora_config, )
 
     model.gradient_checkpointing_enable()
     model.config.use_cache = False
@@ -269,7 +270,7 @@ def autoagi_mixtral(args):
 
         reward = [torch.tensor(reward)]
         # print(reward, input_ids[0], output[0])
-        train_stat = ppo_trainer.step([input_ids[0].to('cpu')], [output[0].to('cpu')], reward)
+        train_stat = ppo_trainer.step([input_ids[0]], [output[0]], reward)
         logging.info(f'\n\nFinish step {epoch}!!!!!\n\n')
 
 if __name__ == '__main__':

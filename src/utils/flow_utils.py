@@ -130,7 +130,7 @@ def check_branch(client, messages, flow_ptr, model_name, temperature=0.):
         print(f'Temperature: {temperature}')
         if temperature > 2:
             print('No valid format output when calling "Check Branch".')
-            exit(1)
+            raise AssertionError
     logging.info(f'{response}, {possible_keys[response - 1]}')
     return possible_keys[response - 1], total_price
 
@@ -170,7 +170,8 @@ def check_tool_use(client, observation, flow_ptr, messages, tool_info, model_nam
         if temperature > 2:
             break
     logging.info('No valid format output when calling "Tool use check".')
-    exit(1)
+    # exit(1)
+    raise AssertionError
 
 
 def get_tool_arg(client, flow_ptr, messages, tool_info, selected_tool, model_name):
@@ -206,7 +207,8 @@ def check_tool_name(client, flow_ptr, messages, tool_list, model_name, temperatu
         print(f'Temperature: {temperature}')
         if temperature > 2:
             logging.info('No valid format output when calling "Tool name select".')
-            exit(1)
+            # exit(1)
+            raise AssertionError
     logging.info(f'{response}, {tool_list[response - 1]}')
     return tool_list[response - 1], total_price
 

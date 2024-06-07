@@ -17,6 +17,8 @@ class Flow(object):
         self.header = None
         
         for row in flow_instruction:
+            if ':::' not in row:
+                continue
             step_block = Block(row)
             self.block_dict[step_block.name] = step_block
             
