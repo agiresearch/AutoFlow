@@ -5,6 +5,7 @@ from pathlib import Path
 from traceback import print_exc
 
 from openai import OpenAI
+from vllm import LLM
 
 # from openagi_main import openagi_main as openagi_gpt_main
 # from mixtral_main import mixtral_main as openagi_mixtral_main
@@ -59,13 +60,21 @@ def autoagi_gpt(args):
                        f'[Key], [Step Name], and [Step Instruction] are all in the string form.\n' \
                        f'[Branch Step Name] should be appear as a unique [Step Name] in the workflow.\n' \
 
+    if 'gpt' in args.model_name:
+        openai_key = args.openai_key
+        exe_client = OpenAI(api_key=openai_key)
+    elif 'gptq' in args.model_name.lower():
+        exe_client = LLM(model=args.model_name, download_dir=args.cache_dir, quantization='gptq', enforce_eager=True, dtype=torch.float16, tensor_parallel_size=8)#gpu_memory_utilization=0.9)# ,
+    else:
+        raise NotImplementedError
+
     chat_history = [{'role': 'system', 'content': autoagi_instruction}, {'role': 'user', 'content': user_instruction}]
     manual_flow = '\n'.join(ReadLineFromFile(args.flow_file))
     chat_history.append({'role': 'assistant', 'content': manual_flow})
     args.dataset = 'train'
-    baseline = openagi_main(args)
+    baseline = openagi_main(args, exe_client)
     args.dataset = 'test'
-    reward = openagi_main(args)
+    reward = openagi_main(args, exe_client)
     logging.info(f'```\nReward:\n{reward}```\n')
     chat_history.append({'role': 'user', 'content': f'The execution performance of given workflow is {baseline}. '
                                                     f'Provide a new workflow in the same form of previous one.'})
@@ -83,7 +92,7 @@ def autoagi_gpt(args):
         logging.info(f'```\nFlows:\n{res}```\n')
         try:
             args.dataset = 'train'
-            reward = openagi_main(args)
+            reward = openagi_main(args, exe_client)
             chat_history.append({'role': 'user', 'content': f'The execution performance of given workflow is {reward}. '
                                                             f'Provide a new workflow in the same form of previous one.'})
             logging.info(f'```\nReward:\n{reward}```\n')
@@ -91,7 +100,7 @@ def autoagi_gpt(args):
                 baseline = reward
                 logging.info(f'\n\nNew Testing:\n\n')
                 args.dataset = 'test'
-                reward = openagi_main(args)
+                reward = openagi_main(args, exe_client)
                 logging.info(f'```\nTesting Reward:\n{reward}```\n')
                 args.dataset = 'train'
 
@@ -228,6 +237,14 @@ def autoagi_mixtral(args):
     args.flow_file = args.auto_flow_file
     baseline = -1.0
 
+    if 'gpt' in args.model_name:
+        openai_key = args.openai_key
+        exe_client = OpenAI(api_key=openai_key)
+    elif 'gptq' in args.model_name.lower():
+        exe_client = LLM(model=args.model_name, download_dir=args.cache_dir, quantization='gptq', enforce_eager=True, dtype=torch.float16, tensor_parallel_size=8)#gpu_memory_utilization=0.9)# ,
+    else:
+        raise NotImplementedError
+
     for epoch in range(args.auto_epochs):
         input_ids = tokenizer(prompt, return_tensors='pt').input_ids.cuda()
         generation_kwargs = dict(temperature=1.0, do_sample=True, top_p=0.9, top_k=40, max_new_tokens=1024)
@@ -247,7 +264,7 @@ def autoagi_mixtral(args):
 
         try:
             args.dataset = 'train'
-            reward = openagi_main(args)
+            reward = openagi_main(args, exe_client)
 
         except Exception as e:
             print_exc()
@@ -260,7 +277,7 @@ def autoagi_mixtral(args):
             baseline = reward
             logging.info(f'\n\nNew Testing:\n\n')
             args.dataset = 'test'
-            reward = openagi_main(args)
+            reward = openagi_main(args, exe_client)
             logging.info(f'```\nTesting Reward:\n{reward}```\n')
             args.dataset = 'train'
             Path(args.output_dir + f"/model/step_{epoch}").mkdir(parents=True, exist_ok=True)

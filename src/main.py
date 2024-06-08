@@ -65,7 +65,7 @@ def finish_one_task(instruction, tool_info, other_info, flow, task_idx, query, t
 
     notebook.reset()
 
-    plan_round = 1
+    plan_round = 0
     flow_ptr = flow.header
     logging.info(f'```\ntask id:\n{task_idx}```\n')
     logging.info(f'```\nquery:\n{query}```\n')
@@ -78,7 +78,10 @@ def finish_one_task(instruction, tool_info, other_info, flow, task_idx, query, t
     return_res = dict()
     while True:
         if plan_round >= args.max_round:
+            return_res['reward'] = 0.0
             break
+        plan_round += 1
+
         chat_history = []
         if isinstance(instruction, str):
             chat_history.append({
@@ -152,7 +155,7 @@ def finish_one_task(instruction, tool_info, other_info, flow, task_idx, query, t
                             # if reach max fail attempts, do not use tool in this step.
                             current_progress.append(f'Answer {plan_round}: ```{res}```')
                             return_res['reward'] = 0.0
-                            break
+                            return total_price, return_res
                             # exit(1)
                         else:
                             continue
@@ -221,7 +224,6 @@ def finish_one_task(instruction, tool_info, other_info, flow, task_idx, query, t
             flow_ptr = flow_ptr.branch[branch]
         logging.info(f'Current Block: \n```\n{flow_ptr}```')
 
-        plan_round += 1
         
     logging.info(f'The price for task {task_idx} is {total_price}')
     return total_price, return_res
@@ -253,7 +255,7 @@ def load_other_info(args):
     else:
         return ""
 
-def main(args):
+def main(args, client):
     # args = global_args()
     # args.log_name = os.path.join(args.log_dir, args.log_file_name)
     # set_logger(args)
@@ -303,14 +305,6 @@ def main(args):
         similairies = []
         valid = []
 
-    if 'gpt' in args.model_name:
-        openai_key = args.openai_key
-        client = OpenAI(api_key=openai_key)
-    elif 'gptq' in args.model_name.lower():
-        client = LLM(model=args.model_name, download_dir=args.cache_dir, quantization='gptq', enforce_eager=True, dtype=torch.float16, tensor_parallel_size=8)#, gpu_memory_utilization=0.7)
-    else:
-        raise NotImplementedError
-
     return_res = None
     # Answer every query
     for idx, query in task_query:
@@ -352,5 +346,12 @@ if __name__ == '__main__':
 
     # load flow
     args.flow_file = os.path.join(args.info_dir, args.task, args.flow_name)
+    if 'gpt' in args.model_name:
+        openai_key = args.openai_key
+        client = OpenAI(api_key=openai_key)
+    elif 'gptq' in args.model_name.lower():
+        client = LLM(model=args.model_name, download_dir=args.cache_dir, quantization='gptq', enforce_eager=True, dtype=torch.float16, gpu_memory_utilization=0.9)# , tensor_parallel_size=8)#
+    else:
+        raise NotImplementedError
 
-    main(args)
+    main(args, client)
