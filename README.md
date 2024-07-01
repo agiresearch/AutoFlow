@@ -119,4 +119,4 @@ In the `AutoFlow/src/info/OpenAGI` folder, there are manually designed workflow 
 
 ## Reference
 
-- We leveraged the dataset of [OpenAGI](https://github.com/agiresearch/OpenAGI) and [TravelPlanner](https://github.com/OSU-NLP-Group/TravelPlanner) projects and based on [CoRE language] (https://github.com/agiresearch/CoRE) to implement our experiment.
+- We leveraged the dataset of [OpenAGI](https://github.com/agiresearch/OpenAGI) and [TravelPlanner](https://github.com/OSU-NLP-Group/TravelPlanner) projects and based on [CoRE language](https://github.com/agiresearch/CoRE) to implement our experiment.
