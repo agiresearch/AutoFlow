@@ -1,0 +1,17 @@
+Read Input Data:::process:::Read input data.:::next::Determine Input Format
+Determine Input Format:::process:::Determine input format.:::next::Identify Algorithm
+Identify Algorithm:::process:::Identify algorithm based on format.:::next::Check Algorithm Availability
+Check Algorithm Availability:::process:::Check availability of algorithm in execution environment.:::next::Set Algorithm Parameters
+Set Algorithm Parameters:::process:::Set up algorithm configuration parameters.:::next::Initialize Algorithm Environment
+Initialize Algorithm Environment:::process:::Initialize algorithm environment.:::next::Run Algorithm
+Run Algorithm:::process:::Run algorithm to process input data.:::next::Analyze Output Data
+Analyze Output Data:::process:::Analyze output data.:::next::Format Output Data
+Format Output Data:::process:::Format output data.:::next::Return Output Data
+Return Output Data:::terminal:::Return output data.:::
+Check Input Data Type:::process:::Check if input data is text.:::next::Identify Language
+Identify Language:::process:::Identify language of input data.:::next::Identify User Intent
+Identify User Intent:::process:::Identify intent of the user input query.:::next::Identify Query Source
+Identify Query Source:::process:::Identify appropriate source for query.:::next::Execute Query
+Execute Query:::process:::Execute query against identified source.:::next::Format Query Response
+Format Query Response:::process:::Format query response.:::next::Return Response
+Return Response:::terminal:::Return response.:::

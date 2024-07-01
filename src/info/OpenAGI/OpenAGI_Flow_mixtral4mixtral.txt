@@ -1,0 +1,12 @@
+Identify Source Data Type:::process:::identify the source data type based on the input.:::next::Identify Desired Output Data Type
+Identify Desired Output Data Type:::process:::identify the desired output data type based on the input.:::next::Create Data Type Mapping
+Create Data Type Mapping:::process:::Create a mapping between data types based on the source data type and desired output data type.:::next::Check Data Types Availability
+Check Data Types Availability:::decision:::Check whether all data types in the mapping is available in the provided models.:::Yes::First Data Type Check::No::Create Data Type Mapping
+First Data Type Check:::decision:::Check whether the first data type in the mapping is the same as the source data type.:::Yes::Last Data Type Check::No::Create Data Type Mapping
+Last Data Type Check:::decision:::Check whether the last data type in the mapping is the same as the desired output data type.:::Yes::Output Mapping::No::Create Data Type Mapping
+Output Mapping:::terminal:::Output the mapping.:::
+Select First Model:::process:::Select the first model in the mapping, and create a mapping between data types.:::next::Check Model Data Types Availability
+Check Model Data Types Availability:::decision:::Check whether all data types in the mapping is available in the provided models.:::Yes::Select Next Model::No::Select First Model
+Select Next Model:::process:::Select the next model in the mapping, and create a new mapping between data types.:::next::Check Model Compatibility
+Check Model Compatibility:::decision:::Check whether the current model's output data type is the same as the next model's input data type.:::Yes::Select First Model::No::Return Model Sequence
+Return Model Sequence:::terminal:::Return the sequence of models and the corresponding mapping between data types.:::

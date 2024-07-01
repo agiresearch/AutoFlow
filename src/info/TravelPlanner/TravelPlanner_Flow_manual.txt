@@ -1,0 +1,45 @@
+Step 1:::Process:::Determine date range, deprature city and destination in task description.:::next::Step 2
+Step 2:::Decision:::Is the destination a state or a city?:::city::step 7::state::step 3
+Step 3:::Process:::Find city list from the destination state:::next::step 4
+Step 4:::Decision:::Based on the input query, determine the duration:::3 days::Step 7::5 days::Step 5::7 days::Step 6
+Step 5:::Process:::Select two cities from the destination state for further exploration in the travel itinerary, ensuring they fit within the travel plans:::next::Step 7
+Step 6:::Process:::Select three cities from the destination state for further exploration in the travel itinerary, ensuring they fit within the travel plans:::next::Step 7
+Step 7:::Process:::Estimate the cost of taking a taxi from departure city to the first destination city.:::next::Step 8
+Step 8:::Process:::Estimate the cost of self-driving from departure city to the first destination city.:::next::Step 9
+Step 9:::Process:::Estimate the cost of taking a flight on the first date from departure city to the first destination city.:::next::Step 10
+Step 10:::Process:::Select the most suitable transportation among taxi, self-driving, and flight to the first destination city for the first two days of this trip. The selection should be constrained by preferences and budget detailed in the task description, avoiding scheduling conflicts.:::next::step 11
+Step 11:::Process:::Find restaurant list at the first destination city.:::next::Step 12
+Step 12:::Process:::Select suitable restaurants of breakfast, lunch, and dinner in the first destination city for first two days in this trip. The selection should be constrained by the budget and preferences detailed in the task description, avoiding duplicates and scheduling conflicts.:::next::step 13
+Step 13:::Process:::Find attraction list at the first destination city.:::next::Step 14
+Step 14:::Process:::Select one attraction for each day in the first destination city for first two days in this trip. The selection should be constrained by the budget and preferences detailed in the task description, avoiding duplicates and scheduling conflicts.:::next::step 15
+Step 15:::Process:::Find accommodation list at at the first destination city.:::next::Step 16
+Step 16:::Process:::Select accommodation for the first destination city for first two days in this trip. The selection should be constrained by the budget and preferences detailed in the task description.:::next::step 17
+Step 17:::Decision:::Is this a 3-days trip?:::Yes::Step 39::No::Step 18
+Step 18:::Process:::Estimate the cost of taking a taxi from the first destination city to the second destination city.:::next::Step 19
+Step 19:::Process:::Estimate the cost of self-driving from the first destination city to the second destination city.:::next::Step 20
+Step 20:::Process:::Estimate the cost of taking a flight on the third date from the first destination city to the second destination city.:::next::Step 21
+Step 21:::Process:::Select the most suitable transportation among taxi, self-driving, and flight to the second destination city for day 3 and day 4 of this trip. The selection should be constrained by preferences and budget detailed in the task description, avoiding scheduling conflicts.:::next::step 22
+Step 22:::Process:::Find restaurant list at the second destination city.:::next::Step 23
+Step 23:::Process:::Select suitable restaurants of breakfast, lunch, and dinner in the second destination city for day 3 and day 4 in this trip. The selection should be constrained by the budget and preferences detailed in the task description, avoiding duplicates and scheduling conflicts.:::next::step 24
+Step 24:::Process:::Find attraction list at the second destination city.:::next::Step 25
+Step 25:::Process:::Select one attraction for each day in the second destination city for day 3 and day 4 in this trip. The selection should be constrained by the budget and preferences detailed in the task description, avoiding duplicates and scheduling conflicts.:::next::step 26
+Step 26:::Process:::Find accommodation list at at the second destination city.:::next::Step 27
+Step 27:::Process:::Select accommodation for the second destination city for day 3 and day 4 in this trip. The selection should be constrained by the budget and preferences detailed in the task description.:::next::step 28
+Step 28:::Decision:::Is this a 5-days trip?:::Yes::Step 39::No::Step 29
+Step 29:::Process:::Estimate the cost of taking a taxi from the second destination city to the third destination city.:::next::Step 30
+Step 30:::Process:::Estimate the cost of self-driving from the second destination city to the third destination city.:::next::Step 31
+Step 31:::Process:::Estimate the cost of taking a flight on the fifth date from the second destination city to the third destination city.:::next::Step 32
+Step 32:::Process:::Select the most suitable transportation among taxi, self-driving, and flight to the third destination city for day 5 and day 6 of this trip. The selection should be constrained by preferences and budget detailed in the task description, avoiding scheduling conflicts.:::next::step 33
+Step 33:::Process:::Find restaurant list at the third destination city.:::next::Step 34
+Step 34:::Process:::Select suitable restaurants of breakfast, lunch, and dinner in the  third destination city for day 5 and day 6 in this trip. The selection should be constrained by the budget and preferences detailed in the task description, avoiding duplicates and scheduling conflicts.:::next::step 35
+Step 35:::Process:::Find attraction list at the third destination city.:::next::Step 36
+Step 36:::Process:::Select one attraction for each day in the  third destination city for day 5 and day 6 in this trip. The selection should be constrained by the budget and preferences detailed in the task description, avoiding duplicates and scheduling conflicts.:::next::step 37
+Step 37:::Process:::Find accommodation list at at the third destination city.:::next::Step 38
+Step 38:::Process:::Select accommodation for the  third destination city for day 5 and day 6 in this trip. The selection should be constrained by the budget and preferences detailed in the task description.:::next::step 39
+Step 39:::Process:::Estimate the cost of taking a taxi from the last destination city back to the departure city.:::next::Step 40
+Step 40:::Process:::Estimate the cost of self-driving from the last destination city back to the departure city.:::next::Step 41
+Step 41:::Process:::Estimate the cost of taking a flight on the first date from the last destination city back to the departure city.:::next::Step 42
+Step 42:::Process:::Select the most suitable transportation among taxi, self-driving, and flight to the departure city for last day of this trip. The selection should be constrained by preferences and budget detailed in the task description, avoiding scheduling conflicts.:::next::step 43
+Step 43:::Process:::Select suitable restaurants of breakfast, lunch, and dinner in the  last destination city for the last day in this trip. The selection should be constrained by the budget and preferences detailed in the task description, avoiding duplicates and scheduling conflicts.:::next::step 44
+Step 44:::Process:::Select one attraction in the last destination city for the last day in this trip. The selection should be constrained by the budget and preferences detailed in the task description, avoiding duplicates and scheduling conflicts.:::next::step 45
+Step 45:::Terminal:::Output the whole plans for all days.:::

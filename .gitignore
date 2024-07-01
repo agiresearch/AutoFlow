@@ -161,5 +161,6 @@ cython_debug/
 log
 openagi_data
 travel_database
+results
 
 .DS_Store

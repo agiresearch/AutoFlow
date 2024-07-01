@@ -1,0 +1,6 @@
+Step 1:::Process:::Establish the main purpose of the project.:::next::Step 2
+Step 2:::Process:::Determine necessary data types for input-output based on the established purpose.:::next::Step 3
+Step 3:::Decision:::Examine the known list of models and select ones which cater to the identified data types.:::Matching Model Available::Step 4:::Matching Model Unavailable::Step 1
+Step 4:::Process:::Ingest the chosen model into the plan, ensuring a fluid transition of data from one model to the next.:::next::Step 5
+Step 5:::Decision:::Assess whether the model sequence in the plan enables a smooth transition of data types.:::Smooth Transition Confirmed::Step 6:::Smooth Transition Not Confirmed::Step 1
+Step 6:::Terminal:::Formulate and present the final workflow detailing the chosen models and their order of execution.:::

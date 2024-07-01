@@ -1,0 +1,8 @@
+Step 1:::Process:::Start by understanding the task requirement and identifying the input data type.:::next::Step 2
+Step 2:::Process:::Clearly define the desired output data type, in accordance with the task description.:::next::Step 3
+Step 3:::Process:::Conduct preliminary model selection from the available models list. The aim is to create a tentative sequence of models that starts with the input data type and ends with the output data type.:::next::Step 4
+Step 4:::Decision:::Confirm that all models in the tentative sequence are part of the provided models list.:::Yes::Step 5::No::Step 6
+Step 5:::Decision:::Verify the compatibility between model sequence outputs and inputs. Ensure the output from one model in the sequence seamlessly feeds into the next model in line.:::Confirmed compatibility::Step 7::Incompatibility found::Step 8
+Step 6:::Terminal:::If the tentative sequence includes models not in the provided list, terminate the process and notify the user of the task impossibility due to model restrictions.:::
+Step 7:::Terminal:::On confirmation of model sequence compatibility, finalize the sequence and output it.:::
+Step 8:::Process:::In case of incompatibilities between model outputs and inputs in the sequence, rearrange the models or add intermediary models to ensure smooth data transition. Return to Step 4 for validation.:::next::Step 4

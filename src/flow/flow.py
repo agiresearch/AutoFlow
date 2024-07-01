@@ -49,5 +49,5 @@ class Flow(object):
         return flow_str
         
 if __name__ == '__main__':
-    flow = Flow('../OpenAGI_Flow.txt')
+    flow = Flow('../OpenAGI_Flow_manual.txt')
     print(flow.__str__())

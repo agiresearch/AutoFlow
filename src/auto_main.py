@@ -4,12 +4,13 @@ import os
 from pathlib import Path
 from traceback import print_exc
 
+from datasets import load_dataset, DownloadMode
 from openai import OpenAI
 from vllm import LLM
 
 # from openagi_main import openagi_main as openagi_gpt_main
 # from mixtral_main import mixtral_main as openagi_mixtral_main
-from main import main as openagi_main
+from main import main as exe_main
 from utils.flow_utils import set_logger, ReadLineFromFile, get_response_from_client
 
 import random
@@ -40,6 +41,21 @@ from peft import PeftModel, PeftModelForCausalLM, prepare_model_for_int8_trainin
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoModel, BitsAndBytesConfig, AutoFeatureExtractor, MixtralForCausalLM
 from trl import PPOConfig, PPOTrainer, AutoModelForCausalLMWithValueHead
 
+from utils.travel_evaluation import eval_score
+from utils.travel_utils import get_result_file
+
+
+def load_exe_LLM(args):
+    if 'gpt' in args.model_name:
+        openai_key = args.openai_key
+        exe_client = OpenAI(api_key=openai_key)
+    elif 'gptq' in args.model_name.lower():
+        exe_client = LLM(model=args.model_name, download_dir=args.cache_dir, quantization='gptq', enforce_eager=True, dtype=torch.float16, tensor_parallel_size=8)#gpu_memory_utilization=0.9)# ,
+    else:
+        raise NotImplementedError
+
+    return exe_client
+
 def autoagi_gpt(args):
     task_description_list = ReadLineFromFile("../openagi_data/task_description.txt")
     task_description = task_description_list[0]
@@ -60,21 +76,15 @@ def autoagi_gpt(args):
                        f'[Key], [Step Name], and [Step Instruction] are all in the string form.\n' \
                        f'[Branch Step Name] should be appear as a unique [Step Name] in the workflow.\n' \
 
-    if 'gpt' in args.model_name:
-        openai_key = args.openai_key
-        exe_client = OpenAI(api_key=openai_key)
-    elif 'gptq' in args.model_name.lower():
-        exe_client = LLM(model=args.model_name, download_dir=args.cache_dir, quantization='gptq', enforce_eager=True, dtype=torch.float16, tensor_parallel_size=8)#gpu_memory_utilization=0.9)# ,
-    else:
-        raise NotImplementedError
+    exe_client = load_exe_LLM(args)
 
     chat_history = [{'role': 'system', 'content': autoagi_instruction}, {'role': 'user', 'content': user_instruction}]
     manual_flow = '\n'.join(ReadLineFromFile(args.flow_file))
     chat_history.append({'role': 'assistant', 'content': manual_flow})
-    args.dataset = 'train'
-    baseline = openagi_main(args, exe_client)
-    args.dataset = 'test'
-    reward = openagi_main(args, exe_client)
+    args.dataset = args.set_type = 'train'
+    baseline = exe_main(args, exe_client)
+    args.dataset = args.set_type = 'test'
+    reward = exe_main(args, exe_client)
     logging.info(f'```\nReward:\n{reward}```\n')
     chat_history.append({'role': 'user', 'content': f'The execution performance of given workflow is {baseline}. '
                                                     f'Provide a new workflow in the same form of previous one.'})
@@ -91,18 +101,18 @@ def autoagi_gpt(args):
         chat_history.append({'role': 'assistant', 'content': res})
         logging.info(f'```\nFlows:\n{res}```\n')
         try:
-            args.dataset = 'train'
-            reward = openagi_main(args, exe_client)
-            chat_history.append({'role': 'user', 'content': f'The execution performance of given workflow is {reward}. '
+            args.dataset = args.set_type = 'train'
+            reward = exe_main(args, exe_client)
+            chat_history.append({'role': 'user', 'content': f'The execution performance of given workflow is {reward}.\n'
                                                             f'Provide a new workflow in the same form of previous one.'})
             logging.info(f'```\nReward:\n{reward}```\n')
             if reward > baseline:
                 baseline = reward
                 logging.info(f'\n\nNew Testing:\n\n')
-                args.dataset = 'test'
-                reward = openagi_main(args, exe_client)
+                args.dataset = args.set_type = 'test'
+                reward = exe_main(args, exe_client)
                 logging.info(f'```\nTesting Reward:\n{reward}```\n')
-                args.dataset = 'train'
+                args.dataset = args.set_type = 'train'
 
         except Exception as e:
             print_exc()
@@ -237,13 +247,7 @@ def autoagi_mixtral(args):
     args.flow_file = args.auto_flow_file
     baseline = -1.0
 
-    if 'gpt' in args.model_name:
-        openai_key = args.openai_key
-        exe_client = OpenAI(api_key=openai_key)
-    elif 'gptq' in args.model_name.lower():
-        exe_client = LLM(model=args.model_name, download_dir=args.cache_dir, quantization='gptq', enforce_eager=True, dtype=torch.float16, tensor_parallel_size=8)#gpu_memory_utilization=0.9)# ,
-    else:
-        raise NotImplementedError
+    exe_client = load_exe_LLM(args)
 
     for epoch in range(args.auto_epochs):
         input_ids = tokenizer(prompt, return_tensors='pt').input_ids.cuda()
@@ -263,8 +267,8 @@ def autoagi_mixtral(args):
         logging.info(f'```\nFlows:\n{out_flow}```\n')
 
         try:
-            args.dataset = 'train'
-            reward = openagi_main(args, exe_client)
+            args.dataset = args.set_type = 'train'
+            reward = exe_main(args, exe_client)
 
         except Exception as e:
             print_exc()
@@ -276,10 +280,10 @@ def autoagi_mixtral(args):
         if reward > baseline:
             baseline = reward
             logging.info(f'\n\nNew Testing:\n\n')
-            args.dataset = 'test'
-            reward = openagi_main(args, exe_client)
+            args.dataset = args.set_type = 'test'
+            reward = exe_main(args, exe_client)
             logging.info(f'```\nTesting Reward:\n{reward}```\n')
-            args.dataset = 'train'
+            args.dataset = args.set_type = 'train'
             Path(args.output_dir + f"/model/step_{epoch}").mkdir(parents=True, exist_ok=True)
             Path(args.output_dir + f"/ppo_trainer/step_{epoch}").mkdir(parents=True, exist_ok=True)
             model.save_pretrained(args.output_dir + f"/model/step_{epoch}")
@@ -290,6 +294,105 @@ def autoagi_mixtral(args):
         train_stat = ppo_trainer.step([input_ids[0]], [output[0]], reward)
         logging.info(f'\n\nFinish step {epoch}!!!!!\n\n')
 
+
+def travel_weighted_score(eval_result):
+    ret = 0.0
+    for k, v in eval_result.items():
+        if k == 'Delivery Rate':
+            ret += v * 10
+        elif k == 'Final Pass Rate':
+            ret += v * 100
+        elif 'macro' in k.lower():
+            ret += v * 5
+        else:
+            ret += v
+    logging.info(f'Weighted Score: {ret}')
+    return ret
+
+
+def auto_travel_gpt(args):
+    exe_client = load_exe_LLM(args)
+
+    task_description_list = load_dataset('osunlp/TravelPlanner', 'test', download_mode=DownloadMode.FORCE_REDOWNLOAD, cache_dir=args.cache_dir)['test']  # Assume we will not test the testset
+    first_task_description = task_description_list[0]['query']
+    second_task_description = task_description_list[-1]['query']
+
+    auto_travel_instruction = f'You are a proficient expert in designing workflows for complex task planning and can revise existing workflows based on their execution performances.\n' \
+                          f'Example task descriptions:\n```{first_task_description}```\n```{second_task_description}```\n\n' \
+                          f'An execution large language model will receive the task description as query, and then follow your generated workflow for providing plans as the task solution.\n' \
+                          f'You must provide a workflow each time, and the User will reply to you with the performances from the execution large language model. ' \
+                          f'The execution performance is a float number between 0 and 1; the higher, the better. '
+
+    user_instruction = f'Provide a workflow with several steps. Each step is a one-line string. ' \
+                       f'Each step is in the form of: ```[Step Name]:::[Step Type]:::[Step Instruction]:::[Step Branch]```\n' \
+                       f'[Step Type] could be "process", "terminal", or "decision".\n' \
+                       f'[Step Branch] consists of several branches. Each branch is in the form of "[Key]::[Branch Step Name]" and separated by "::".\n' \
+                       f'Note: "process" step has exactly one branch, with "next" as the key; "decision" step has more than one branches; ' \
+                       f'"terminal" step has zero branch, indicating the end of working flow, but there could be multiple "terminal" steps.\n' \
+                       f'At least one "terminal" step exists, meaning the last step of the workflow!\n' \
+                       f'[Key], [Step Name], and [Step Instruction] are all in the string form.\n' \
+                       f'[Branch Step Name] should be appear as a unique [Step Name] in the workflow.\n' \
+
+    chat_history = [{'role': 'system', 'content': auto_travel_instruction}, {'role': 'user', 'content': user_instruction}]
+    manual_flow = '\n'.join(ReadLineFromFile(args.flow_file))
+    chat_history.append({'role': 'assistant', 'content': manual_flow})
+
+    args.dataset = args.set_type = 'train'
+    args.results_name = f'auto_{args.auto_model_name}_0'
+    if not os.path.exists(get_result_file(args)):
+        exe_main(args, exe_client)
+    eval_result = eval_score(args.dataset, get_result_file(args), cache_dir=args.cache_dir)[0]
+    baseline_sentence = ', '.join([f'{k} is {v}' for k, v in eval_result.items()])
+    baseline = travel_weighted_score(eval_result)
+    args.dataset = args.set_type = 'validation'
+    if not os.path.exists(get_result_file(args)):
+        exe_main(args, exe_client)
+    reward = eval_score(args.dataset, get_result_file(args), cache_dir=args.cache_dir)
+    logging.info(f'```\nReward:\n{reward}```\n')
+    travel_weighted_score(reward[0])
+    chat_history.append({'role': 'user', 'content': f'The execution performance of given workflow is shown as below:\n{baseline_sentence}.\n'
+                                                    f'Provide a new workflow in the same form of previous one.'})
+
+    openai_key = args.openai_key
+    client = OpenAI(api_key=openai_key)
+    args.flow_file = args.auto_flow_file
+
+    for epoch in range(args.auto_epochs):
+        args.results_name = f'auto_{args.auto_model_name}_{epoch + 1}'
+        res = get_response_from_client(client, chat_history, args.auto_model_name)[0]
+        fout = open(args.flow_file, 'w')
+        fout.write(res)
+        fout.close()
+        chat_history.append({'role': 'assistant', 'content': res})
+        logging.info(f'```\nFlows:\n{res}```\n')
+        try:
+            args.dataset = args.set_type = 'train'
+            exe_main(args, exe_client)
+            eval_result = eval_score(args.dataset, get_result_file(args), cache_dir=args.cache_dir)
+            logging.info(f'```\nReward:\n{eval_result}```\n')
+            eval_result = eval_result[0]
+            reward_sentence = ', '.join([f'{k} is {v}' for k, v in eval_result.items()])
+            reward = travel_weighted_score(eval_result)
+            chat_history.append({'role': 'user', 'content': f'The execution performance of given workflow is {reward_sentence}. '
+                                                            f'Provide a new workflow in the same form of previous one.'})
+            if reward > baseline:
+                baseline = reward
+                logging.info(f'\n\nNew Testing:\n\n')
+                args.dataset = args.set_type = 'validation'
+                exe_main(args, exe_client)
+                reward = eval_score(args.dataset, get_result_file(args), cache_dir=args.cache_dir)
+                logging.info(f'```\nReward:\n{reward}```\n')
+                travel_weighted_score(reward[0])
+                args.dataset = args.set_type = 'train'
+
+        except Exception as e:
+            print_exc()
+            chat_history.append({'role': 'user', 'content': f'When executing the workflow, there is an error: {e}. \n'
+                                                            f'Please re-generate a new workflow in the same form of the first one.'})
+            logging.info(f'```\nError:\n{e}```\n')
+    logging.info(f'Final Chat History:\n\n```{chat_history}\n\n```')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--openai_key", type=str, default='')
@@ -298,10 +401,11 @@ if __name__ == '__main__':
     parser.add_argument("--cache_dir", type=str, default='../cache_dir/')
     parser.add_argument("--log_file_name", type=str, default='../log/autoagi.txt')
     parser.add_argument("--log_dir", type=str, default='')
+    parser.add_argument("--task", type=str, default='OpenAGI')
     # parser.add_argument("--tool_file", type=str, default='./info/OpenAGI/tools.txt')
     parser.add_argument("--tool_name", type=str, default='tools.txt')
-    # parser.add_argument("--flow_file", type=str, default='./info/OpenAGI/OpenAGI_Flow.txt')
-    parser.add_argument("--flow_name", type=str, default='OpenAGI_Flow.txt')
+    # parser.add_argument("--flow_file", type=str, default='./info/OpenAGI/OpenAGI_Flow_manual.txt')
+    parser.add_argument("--flow_name", type=str, default='OpenAGI_Flow_manual.txt')
     parser.add_argument("--auto_flow_name", type=str, default='auto_OpenAGI_Flow.txt')
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--auto_epochs", type=int, default=10)
@@ -311,7 +415,6 @@ if __name__ == '__main__':
     parser.add_argument("--dataset", type=str, default='test')
     parser.add_argument("--auto_model_name", type=str, default='gpt-4-1106-preview', help='Flow Generator LLM name.')
     parser.add_argument("--model_name", type=str, default='gpt-4-1106-preview', help='Execution LLM name.')
-    parser.add_argument("--task", type=str, default='OpenAGI')
     parser.add_argument("--other_info_name", type=str, default='other_info.txt')
     parser.add_argument("--max_fail_times", type=int, default=2, help='Max allow fail times on tools arg choice')
     parser.add_argument("--get_observation", type=str, default='traverse',
@@ -330,6 +433,8 @@ if __name__ == '__main__':
     parser.add_argument("--accumulate_steps", type=int, default=1)
     parser.add_argument("--warm_up_proportion", type=float, default=0.1)
     parser.add_argument("--output_dir", type=str, default='./')
+    parser.add_argument("--sample_query", type=int, default=1)
+    parser.add_argument("--random_sample_query", type=int, default=0)
 
     args = parser.parse_known_args()[0]
     args.device_list = ["cuda:0", "cpu"]
@@ -342,9 +447,19 @@ if __name__ == '__main__':
     args.tool_file = os.path.join(args.info_dir, args.task, args.tool_name)
     args.other_file = os.path.join(args.info_dir, args.task, args.other_info_name)
 
-    if 'tral' in args.auto_model_name:
-        autoagi_mixtral(args)
-    elif 'gpt' in args.auto_model_name:
-        autoagi_gpt(args)
+    if args.task == 'OpenAGI':
+        if 'tral' in args.auto_model_name:
+            autoagi_mixtral(args)
+        elif 'gpt' in args.auto_model_name:
+            autoagi_gpt(args)
+        else:
+            raise NotImplementedError
+    elif args.task == 'TravelPlanner':
+        if 'tral' in args.auto_model_name:
+            raise NotImplementedError
+        elif 'gpt' in args.auto_model_name:
+            auto_travel_gpt(args)
+        else:
+            raise NotImplementedError
     else:
         raise NotImplementedError
