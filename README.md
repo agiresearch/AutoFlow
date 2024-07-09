@@ -6,7 +6,13 @@ This package is mainly contributed by [Zelong Li](https://github.com/lzl65825) (
 
 ## Citation
 
-To be updated
+```
+@article{li2024autoflow,
+  title={AutoFlow: Automated Workflow Generation for Large Language Model Agents},
+  author={Li, Zelong and Xu, Shuyuan and Mei, Kai and Hua, Wenyue and Rama, Balaji and Raheja, Om and Wang, Hao and Zhu, He and Zhang, Yongfeng},
+  year={2024}
+}
+```
 
 ## Requirements
 
